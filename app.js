@@ -45,10 +45,10 @@ function wikiImage(title) {
     { headers: { accept: "application/json" } }
   )
     .then((r) => (r.ok ? r.json() : null))
-    .then((j) => {
-      const src = j?.thumbnail?.source || j?.originalimage?.source || null;
-      return src ? src.replace(/\/(\d+)px-/, "/640px-") : null;
-    })
+    // Use thumbnail.source EXACTLY as returned — it's already CDN-cached and
+    // always loads. Requesting any other width forces Wikimedia's thumbnailer
+    // to generate it on demand, which gets throttled (HTTP 400) under bursts.
+    .then((j) => j?.thumbnail?.source || j?.originalimage?.source || null)
     .catch(() => null)
     // Don't cache a failure — let the next attempt (e.g. the reveal) retry.
     .then((src) => { if (!src) delete imgCache[title]; return src; });
@@ -58,14 +58,19 @@ function wikiImage(title) {
 async function showItem(bodyEl, captionEl, item) {
   captionEl.textContent = item.label;
   bodyEl.innerHTML = '<div class="waiting">🖼️</div>';
+  const fallback = () => {
+    bodyEl.innerHTML = `<div class="qmark" style="font-size:2.5rem">${item.label}</div>`;
+  };
   const src = await wikiImage(item.wiki);
   if (src) {
     const img = new Image();
-    img.src = src;
     img.alt = item.label;
     img.onload = () => { bodyEl.innerHTML = ""; bodyEl.appendChild(img); };
+    // Never leave the 🖼️ placeholder stuck — fall back to the label on error.
+    img.onerror = fallback;
+    img.src = src;
   } else {
-    bodyEl.innerHTML = `<div class="qmark" style="font-size:2.5rem">${item.label}</div>`;
+    fallback();
   }
 }
 
