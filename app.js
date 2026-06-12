@@ -113,6 +113,9 @@ function render() {
   const me = room.players?.[mySlot];
   const opp = room.players?.[oppSlot];
 
+  // Expose the game state to CSS so the mobile layout can adapt per state.
+  document.body.dataset.state = room.state;
+
   // Skip re-rendering identical states (keeps images from flickering).
   const key = JSON.stringify([room.state, room.roundIndex, room.winner, me, opp, room.scores]);
   if (key === lastRenderKey) return;

@@ -265,9 +265,46 @@ main {
   to { transform: translateY(110vh) rotate(720deg); }
 }
 
-/* ---------- small screens ---------- */
+/* ---------- tablets / large phones: stack the two panels ---------- */
 @media (max-width: 720px) {
   .panels { flex-direction: column; }
   .center { flex-direction: row; min-width: 0; }
   .panel-body { min-height: 220px; }
+}
+
+/* ---------- portrait phones: focus on the opponent's image ----------
+   On a narrow screen your own side is just a "?", so we hide it during play
+   and make the opponent's picture (the thing you're trying to guess about)
+   the hero. Order: opponent image → your action button → status/controls. */
+@media (max-width: 640px) {
+  header { padding: 10px 14px; }
+  h1 { font-size: 1.3rem; }
+  #scorebar { font-size: 0.95rem; }
+  main { padding: 0 12px 24px; gap: 12px; }
+
+  .panels { gap: 12px; }
+  #panel-opp { order: 1; }
+  #panel-me { order: 2; }
+  .center { order: 3; gap: 12px; }
+  .vs { display: none; }            /* decorative, just clutter in a column */
+
+  .theme { font-size: 1.15rem; padding: 10px 18px; }
+
+  /* The opponent's image is the focus while playing / on the reveal. */
+  body[data-state="playing"] #opp-body,
+  body[data-state="done"] #opp-body { min-height: 52vh; }
+  #panel-opp .panel-body img { max-height: 62vh; }
+
+  /* Hide your own "?" box (and its caption) until the reveal — on mobile your
+     panel collapses to just your name + action button. */
+  body[data-state="lobby"] #me-body,
+  body[data-state="lobby"] #me-caption,
+  body[data-state="playing"] #me-body,
+  body[data-state="playing"] #me-caption { display: none; }
+
+  .action { margin: 8px auto 12px; width: calc(100% - 28px); }
+  #panel-me { border-color: transparent; background: transparent; box-shadow: none; }
+  body[data-state="done"] #panel-me { background: var(--panel); }
+  #panel-me .panel-name { background: transparent; font-size: 1.05rem; padding: 6px; }
+  .status { max-width: none; }
 }
