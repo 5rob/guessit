@@ -1,7 +1,10 @@
 import { ROUNDS } from "./rounds.js";
 
 const $ = (s) => document.querySelector(s);
-const POLL_MS = 1200;
+// Poll interval is a balance between feeling live and not burning Redis commands
+// (the free KV plan is metered per command). 1.8s is plenty for a talk-out-loud
+// turn-based game; we also pause entirely when the tab is hidden.
+const POLL_MS = 1800;
 
 let roomId = "";
 let mySlot = "";
@@ -222,9 +225,21 @@ async function join() {
   $("#join").classList.add("hidden");
   $("#game").classList.remove("hidden");
   applyRoom(j.room);
-  clearInterval(pollTimer);
-  pollTimer = setInterval(poll, POLL_MS);
+  startPolling();
 }
+
+// Only poll a visible tab — a hidden one changes nothing the player can see, so
+// polling it just wastes KV commands.
+function startPolling() {
+  clearInterval(pollTimer);
+  pollTimer = document.hidden ? null : setInterval(poll, POLL_MS);
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (!mySlot) return;
+  if (document.hidden) { clearInterval(pollTimer); pollTimer = null; }
+  else { poll(); startPolling(); } // snap up to date the moment you look back
+});
 
 $("#join-btn").onclick = join;
 // NB: returning false from an onkeydown handler cancels the keystroke, so these
