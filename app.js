@@ -9,6 +9,8 @@ let myName = "";
 let room = null;
 let pollTimer = null;
 let lastRenderKey = "";
+let lastVersion = -1;
+let warnedStorage = false;
 
 /* ---------- API ---------- */
 
@@ -21,18 +23,41 @@ async function api(body) {
   return r.json();
 }
 
+// Apply a server room object, but drop anything staler than what we've already
+// seen. This kills the lobby/game flip-flop caused by reads racing writes.
+function applyRoom(next) {
+  if (!next) return false;
+  if (next.version != null && next.version < lastVersion) return false;
+  if (next.version != null) lastVersion = next.version;
+  room = next;
+  if (next._via) warnStorage(next._via);
+  render();
+  return true;
+}
+
+function warnStorage(via) {
+  if (via !== "memory" || warnedStorage) return;
+  warnedStorage = true;
+  const el = document.createElement("div");
+  el.id = "storage-warn";
+  el.innerHTML =
+    "⚠️ No shared storage detected — add the free <b>Upstash KV</b> integration " +
+    "in your Vercel project or the two screens won't stay in sync. (See README.)";
+  document.body.appendChild(el);
+}
+
 async function poll() {
   try {
     const r = await fetch(`/api/room?room=${encodeURIComponent(roomId)}`);
     const data = await r.json();
-    // Lambda memory got wiped (cold start) — quietly rejoin with the same name.
+    // Room vanished (cold start, memory mode) — quietly rejoin with the same name.
     if (data.state === "none" && mySlot) {
+      warnStorage(data._via);
       const j = await api({ action: "join", name: myName });
-      if (j.slot) { mySlot = j.slot; room = j.room; }
+      if (j.slot) { mySlot = j.slot; lastVersion = -1; applyRoom(j.room); }
     } else {
-      room = data;
+      applyRoom(data);
     }
-    render();
   } catch { /* transient network blip — next poll will catch up */ }
 }
 
@@ -191,12 +216,12 @@ async function join() {
   if (j.error) { $("#join-error").textContent = j.error; return; }
 
   mySlot = j.slot;
-  room = j.room;
+  lastVersion = -1;
   localStorage.setItem("guessit", JSON.stringify({ myName, roomId }));
 
   $("#join").classList.add("hidden");
   $("#game").classList.remove("hidden");
-  render();
+  applyRoom(j.room);
   clearInterval(pollTimer);
   pollTimer = setInterval(poll, POLL_MS);
 }
@@ -209,23 +234,19 @@ $("#roomcode").onkeydown = (e) => { if (e.key === "Enter") join(); };
 
 $("#ready-btn").onclick = async () => {
   const me = room?.players?.[mySlot];
-  const j = await api({ action: "ready", slot: mySlot, ready: !me?.ready });
-  if (j.room) { room = j.room; render(); }
+  applyRoom((await api({ action: "ready", slot: mySlot, ready: !me?.ready })).room);
 };
 
 $("#play-btn").onclick = async () => {
-  const j = await api({ action: "play", total: ROUNDS.length });
-  if (j.room) { room = j.room; render(); }
+  applyRoom((await api({ action: "play", total: ROUNDS.length })).room);
 };
 
 $("#win-btn").onclick = async () => {
-  const j = await api({ action: "win", slot: mySlot });
-  if (j.room) { room = j.room; render(); }
+  applyRoom((await api({ action: "win", slot: mySlot })).room);
 };
 
 $("#again-btn").onclick = async () => {
-  const j = await api({ action: "again" });
-  if (j.room) { room = j.room; render(); }
+  applyRoom((await api({ action: "again" })).room);
 };
 
 /* ---------- boot: prefill last session ---------- */

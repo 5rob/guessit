@@ -236,6 +236,23 @@ main {
   100% { transform: scale(1); opacity: 1; }
 }
 
+#storage-warn {
+  position: fixed;
+  left: 50%;
+  bottom: 14px;
+  transform: translateX(-50%);
+  max-width: 92vw;
+  background: #3a2a00;
+  border: 1px solid var(--gold);
+  color: var(--gold);
+  font-size: 0.85rem;
+  padding: 10px 16px;
+  border-radius: 12px;
+  text-align: center;
+  z-index: 40;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
 .confetti {
   position: fixed;
   top: -40px;

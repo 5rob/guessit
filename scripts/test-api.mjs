@@ -74,5 +74,18 @@ check("second round differs from first", r.data.room.roundIndex !== firstIdx);
 r = await call("POST", { action: "reset", room: ROOM });
 check("reset wipes room", Object.keys(r.data.room.players).length === 0);
 
+// version increases monotonically on every mutation (the anti-flicker guard)
+r = await call("POST", { action: "join", room: "ver", name: "A" });
+const v1 = r.data.room.version;
+r = await call("POST", { action: "join", room: "ver", name: "B" });
+const v2 = r.data.room.version;
+r = await call("POST", { action: "ready", room: "ver", slot: "p1", ready: true });
+const v3 = r.data.room.version;
+check("version is monotonic", v1 < v2 && v2 < v3);
+
+// responses advertise the storage mode so the client can warn
+r = await call("GET", null, { room: "ver" });
+check("GET advertises storage mode (_via)", r.data._via === "memory" || r.data._via === "kv");
+
 console.log(failures ? `\n${failures} test(s) failed` : "\nAll API tests passed ✔");
 process.exit(failures ? 1 : 0);

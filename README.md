@@ -17,15 +17,22 @@ Images are fetched live from the Wikipedia API (no API key needed).
 
 ## Deploy
 
-Just import this repo into [Vercel](https://vercel.com/new) — it's a static page
-plus one serverless function (`api/room.js`). No build step, no config.
+1. Import this repo into [Vercel](https://vercel.com/new) — it's a static page
+   plus one serverless function (`api/room.js`). No build step, no config.
 
-**Optional but recommended:** room state lives in lambda memory by default, which
-works fine for two players but can reset on a cold start (the game just bounces
-back to the lobby — players auto-rejoin). For rock-solid state, add the
-**Upstash Redis** integration from the Vercel Marketplace to the project; the
-function picks up the env vars (`UPSTASH_REDIS_REST_URL` / `KV_REST_API_URL`)
-automatically.
+2. **Add shared storage (required).** Vercel runs the function on many separate
+   server instances, each with its own memory — so without a shared store the
+   two screens disagree and the game flip-flops between the lobby and the round.
+   Fix it in ~1 minute:
+   - In your Vercel project → **Storage** → **Create Database** → **Upstash for
+     Redis** (free "Free" tier) → connect it to this project.
+   - Redeploy (Vercel does this automatically on connect).
+
+   The function auto-detects the injected env vars (`KV_REST_API_URL` /
+   `KV_REST_API_TOKEN`, or `UPSTASH_REDIS_REST_*`). If storage isn't connected,
+   the page shows a yellow warning banner so you know.
+
+> Without the store the app still loads, but state won't sync between players.
 
 ## Adding rounds
 
