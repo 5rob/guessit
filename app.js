@@ -197,8 +197,10 @@ async function join() {
 }
 
 $("#join-btn").onclick = join;
-$("#nickname").onkeydown = (e) => e.key === "Enter" && join();
-$("#roomcode").onkeydown = (e) => e.key === "Enter" && join();
+// NB: returning false from an onkeydown handler cancels the keystroke, so these
+// must NOT return the `&&` expression's value — keep the body statement-only.
+$("#nickname").onkeydown = (e) => { if (e.key === "Enter") join(); };
+$("#roomcode").onkeydown = (e) => { if (e.key === "Enter") join(); };
 
 $("#ready-btn").onclick = async () => {
   const me = room?.players?.[mySlot];
