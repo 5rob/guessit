@@ -1,0 +1,11 @@
+{
+  "name": "guessit",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Two-player office guessing game",
+  "scripts": {
+    "check-images": "node scripts/check-images.mjs",
+    "test": "node scripts/test-api.mjs"
+  }
+}

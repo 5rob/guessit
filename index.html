@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Guess It!</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎯</text></svg>" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header>
+    <h1>🎯 GUESS IT!</h1>
+    <div id="scorebar" class="hidden">
+      <span id="score-opp" class="score"></span>
+      <span class="score-sep">vs</span>
+      <span id="score-me" class="score"></span>
+    </div>
+  </header>
+
+  <!-- Join overlay -->
+  <div id="join" class="overlay">
+    <div class="card">
+      <h2>Who are you?</h2>
+      <input id="nickname" maxlength="20" placeholder="Your nickname" autocomplete="off" />
+      <input id="roomcode" maxlength="24" placeholder="Room code" value="office" autocomplete="off" />
+      <p class="hint">Use the same room code as your opponent (and different nicknames!)</p>
+      <button id="join-btn" class="big">JOIN</button>
+      <p id="join-error" class="error"></p>
+    </div>
+  </div>
+
+  <!-- Game -->
+  <main id="game" class="hidden">
+    <div id="theme" class="theme hidden"></div>
+
+    <div class="panels">
+      <section class="panel" id="panel-opp">
+        <div class="panel-name" id="opp-name">Waiting for opponent…</div>
+        <div class="panel-body" id="opp-body"><div class="waiting">👀</div></div>
+        <div class="panel-caption" id="opp-caption"></div>
+      </section>
+
+      <div class="center">
+        <div class="vs">VS</div>
+        <button id="play-btn" class="big hidden" disabled>PLAY</button>
+        <button id="again-btn" class="big hidden">PLAY AGAIN</button>
+        <div id="status" class="status"></div>
+      </div>
+
+      <section class="panel mine" id="panel-me">
+        <div class="panel-name" id="me-name"></div>
+        <div class="panel-body" id="me-body"><div class="qmark">?</div></div>
+        <div class="panel-caption" id="me-caption"></div>
+        <button id="ready-btn" class="action hidden">I'M READY</button>
+        <button id="win-btn" class="action win hidden">🎉 I GUESSED IT!</button>
+      </section>
+    </div>
+
+    <div id="winner-banner" class="winner hidden"></div>
+  </main>
+
+  <script type="module" src="app.js"></script>
+</body>
+</html>
